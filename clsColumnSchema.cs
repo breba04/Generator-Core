@@ -13,11 +13,12 @@ namespace Generator_Core
         public string ColumnName { get; set; }
         public string ColumnType { get; set; }
         public bool IsPrimaryKey { get; set; }
+        public bool IsUnique { get; set; }
         public bool NotNull { get; set; }
         //public int? TableRefrence { get; set; } = null;
         //public clsColumnSchema ColumnRefrence { get; set; } = null;
         public clsColumnSchema(int ColumnID, string ColumnName, string ColumnType,bool IsPrimaryKey,
-            bool NotNull
+            bool NotNull,bool IsUnique
             //,int? TableRefrence = null, clsColumnSchema ColumnRefrence = null
             )
         {
@@ -26,6 +27,7 @@ namespace Generator_Core
             this.ColumnType = ColumnType;
             this.IsPrimaryKey = IsPrimaryKey;
             this.NotNull = NotNull;
+            this.IsUnique = IsUnique;
             //this.TableRefrence = TableRefrence;
             //this.ColumnRefrence = ColumnRefrence;
         }
