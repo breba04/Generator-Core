@@ -31,12 +31,27 @@ namespace Generator_Core
         }
         static public string GenerateCreateTableScript(string databaseName, clsTableSchema Table)
         {
-            var Colums = Table.Columns.Where(c => c.IsPrimaryKey).Select(c => $@"[{c.ColumnName}] {c.ColumnType}  PRIMARY KEY");
-            Colums = Colums.Concat(Table.Columns.Where(c => !c.IsPrimaryKey).Select(c => $@"[{c.ColumnName}] {c.ColumnType} {(c.IsUnique ? "UNIQUE" : "")} {(c.NotNull ? "NOT NULL" : "NULL")}"));
+
+            bool isAddedPrimaryKey = false;
+            string isNullable = "";
+            string primaryColumn = "";
             StringBuilder sb = new StringBuilder();
             sb.AppendLine(GenerateUseDatabaseScript(databaseName));
             sb.AppendLine($"CREATE TABLE [{Table.TableName}] ( ");
-            sb.AppendLine(string.Join(",\n", Colums));
+            foreach (clsColumnSchema column in Table.Columns)
+            {
+                isNullable = column.NotNull ? "NOT NULL" : "NULL";
+                sb.Append($"  [ {column.ColumnName}] {column.ColumnType} {isNullable} ");
+                if (!isAddedPrimaryKey && column.IsPrimaryKey)
+                {
+                    sb.Append(" PRIMARY KEY");
+                    isAddedPrimaryKey = true;
+                }
+                sb.Append(" ,");
+
+            }
+            sb.Replace(",", ") ", sb.Length - 1, 1);
+            //sb.AppendLine(string.Join(",\n", Colums));
             sb.AppendLine(")");
             return sb.ToString();
         }
@@ -84,7 +99,7 @@ namespace Generator_Core
                 {
                     sb.Append($"  [{column.ColumnName}] = @{column.ColumnName} ,");
                 }
-                else
+                if(column.IsPrimaryKey && string.IsNullOrEmpty(primaryColumn))
                 {
                     primaryColumn = column.ColumnName;
                 }
@@ -92,7 +107,7 @@ namespace Generator_Core
             sb.Remove(sb.Length - 1, 1);
             if (primaryColumn != "")
             {
-                sb.AppendLine($@" WHERE [{primaryColumn}] = @ {primaryColumn} ");
+                sb.AppendLine($@" WHERE [{primaryColumn}] = @{primaryColumn} ");
             }
             return sb.ToString();
         }
@@ -104,12 +119,13 @@ namespace Generator_Core
             {
                 if (column.IsPrimaryKey)
                 {
-                    sb.Append($" WHERE [ {column.ColumnName}] = @{column.ColumnName} ");
+                    sb.Append($" WHERE [{column.ColumnName}] = @{column.ColumnName} ");
                     break;
                 }
             }
             
-            sb.AppendLine(@"; SELECT  @@ROWCOUNT() AS RowAffected; ");
+            sb.AppendLine(@"; ");
+            sb.AppendLine(@"SELECT  @@ROWCOUNT() AS RowAffected; ");
             return sb.ToString();
         }
         static private string _GenerateCreateSelectStoredProcedureScript(clsTableSchema Table ,clsColumnSchema OdrerBy = null)
@@ -118,7 +134,7 @@ namespace Generator_Core
             sb.AppendLine($@"SELECT * FROM [{Table.TableName}]  ");
             if (OdrerBy != null)
             {
-                sb.AppendLine($@" ORDER BY [ {OdrerBy.ColumnName}]  ");
+                sb.AppendLine($@" ORDER BY [{OdrerBy.ColumnName}]  ");
             }
             return sb.ToString();
         }
@@ -129,7 +145,7 @@ namespace Generator_Core
             sb.Append($"CREATE PROCEDURE SP_{Procedure.ProcedureName} ");
             foreach (clsSPParameter parameter in Procedure.Parameters)
             {
-                sb.Append($"  [ {parameter.Name}] {parameter.Type}");
+                sb.Append($"  @{parameter.Name} {parameter.Type}");
                 if (parameter.isOutput)
                 {
                     sb.Append(" OUTPUT");
@@ -137,7 +153,7 @@ namespace Generator_Core
                 sb.Append(',');
             }
             sb.Replace(",", ") ", sb.Length - 1, 1);
-            sb.AppendLine("AS");
+            sb.AppendLine(" AS");
             sb.AppendLine("BEGIN");
             switch(Procedure.SPType)
             {
