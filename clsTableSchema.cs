@@ -8,8 +8,8 @@ namespace Generator_Core
 {
     public class clsTableSchema
     {
-        string TableName { get; set; }
-        List<clsColumnSchema> Columns { get; set; }
+        public string TableName { get; set; }
+        public List<clsColumnSchema> Columns { get; set; }
         public clsTableSchema(string TableName, List<clsColumnSchema> Columns)
         {
             this.TableName = TableName;
