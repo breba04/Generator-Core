@@ -33,15 +33,12 @@ namespace Generator_Core
         {
 
             bool isAddedPrimaryKey = false;
-            string isNullable = "";
-            string primaryColumn = "";
             StringBuilder sb = new StringBuilder();
             sb.AppendLine(GenerateUseDatabaseScript(databaseName));
             sb.AppendLine($"CREATE TABLE [{Table.TableName}] ( ");
             foreach (clsColumnSchema column in Table.Columns)
             {
-                isNullable = column.NotNull ? "NOT NULL" : "NULL";
-                sb.Append($"  [ {column.ColumnName}] {column.ColumnType} {isNullable} ");
+                sb.Append($"  [{column.ColumnName}] {column.ColumnType} {(column.NotNull ? "NOT NULL" : "NULL")} ");
                 if (!isAddedPrimaryKey && column.IsPrimaryKey)
                 {
                     sb.Append(" PRIMARY KEY");
