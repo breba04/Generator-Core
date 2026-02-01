@@ -10,10 +10,28 @@ namespace Generator_Core
     {
         public string TableName { get; set; }
         public List<clsColumnSchema> Columns { get; set; }
-        public clsTableSchema(string TableName, List<clsColumnSchema> Columns)
+        public clsTableSchema()
         {
-            this.TableName = TableName;
-            this.Columns = Columns;
+            TableName = "";
+            Columns = new List<clsColumnSchema>();
+        }
+        public bool AddColumn(clsColumnSchema column)
+        {
+            if (string.IsNullOrWhiteSpace(TableName))
+                throw new InvalidOperationException("Set table name before adding columns.");
+
+            if (Columns.Any(c => c.ColumnName == column.ColumnName))
+                throw new InvalidOperationException(
+                    $"Table '{TableName}' already contains a column named '{column.ColumnName}'."
+                );
+
+            if (column.IsPrimaryKey && Columns.Any(c => c.IsPrimaryKey))
+                throw new InvalidOperationException(
+                    $"Table '{TableName}' already has a primary key column."
+                );
+
+            Columns.Add(column);
+            return true;
         }
     }
 }
